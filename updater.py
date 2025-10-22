@@ -11,9 +11,9 @@ import subprocess
 from urllib.request import urlopen, URLError
 from datetime import datetime
 
-# GitHub repository details (user will need to configure these)
-GITHUB_REPO_OWNER = "your-username"  # Replace with actual GitHub username
-GITHUB_REPO_NAME = "your-repo"       # Replace with actual repo name
+# GitHub repository details (configured for this project)
+GITHUB_REPO_OWNER = "DeyanShahov"    # GitHub username
+GITHUB_REPO_NAME = "python-console-auto-update"  # Repository name
 GIT_BRANCH = "production"            # Branch for production releases
 
 # Local version file
