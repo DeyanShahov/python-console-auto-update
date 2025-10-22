@@ -40,8 +40,38 @@
 
 ### Стартиране на приложението
 
+#### 🔧 Бърза инсталация (за потребители)
+Ако искате да инсталирате приложението на чиста машина, използвайте тази едноредова команда:
+
+**Linux/macOS:**
+```bash
+curl -sSL https://raw.githubusercontent.com/DeyanShahov/python-console-auto-update/production/install.py | python3
+```
+
+**Windows (PowerShell):**
+```powershell
+curl -sSL https://raw.githubusercontent.com/DeyanShahov/python-console-auto-update/production/install.py | python
+```
+
+**Windows (CMD):**
+```cmd
+curl -sSL https://raw.githubusercontent.com/DeyanShahov/python-console-auto-update/production/install.py -o install.py && python install.py
+```
+
+Това ще:
+- Изтегли последната стабилна версия
+- Подготви приложението за употреба
+- Предложи директно стартиране
+
+#### 🚀 Ръчно стартиране
+Ако вече имате инсталирана директорията:
+
 ```bash
 python main.py
+```
+или
+```bash
+python3 main.py
 ```
 
 При стартиране програмата ще:
