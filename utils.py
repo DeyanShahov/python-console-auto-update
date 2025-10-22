@@ -68,8 +68,20 @@ def read_json_file():
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)
+            
+            # Extract content and meta-info
+            content = data.get("content", "Няма съдържание.")
+            meta_info = {k: v for k, v in data.items() if k != "content"}
+
             print(f"\nСъдържание на файла '{filepath}':")
-            print(json.dumps(data, indent=2, ensure_ascii=False))
+            print(content)
+
+            if meta_info:
+                show_meta = input("\nЖелаете ли да видите мета информацията за файла? (y/n): ").strip().lower()
+                if show_meta == 'y':
+                    print("\nМета информация:")
+                    print(json.dumps(meta_info, indent=2, ensure_ascii=False))
+            
     except json.JSONDecodeError:
         print(f"Грешка: Файлът '{filepath}' не е валиден JSON.")
     except FileNotFoundError:
