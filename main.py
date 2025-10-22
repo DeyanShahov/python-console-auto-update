@@ -5,12 +5,31 @@ Main entry point for the application.
 """
 
 import os
+import json
 from utils import show_menu, read_json_file, create_new_json, DATA_DIR
 from updater import check_for_updates
 
 
+def get_app_version():
+    """
+    Get version and last updated date from version.json file.
+    Returns tuple (version, last_updated) or defaults if file doesn't exist.
+    """
+    try:
+        if os.path.exists("version.json"):
+            with open("version.json", 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                version = data.get('version', 'unknown')
+                last_updated = data.get('last_updated', 'unknown')
+                return version, last_updated
+    except (json.JSONDecodeError, KeyError):
+        pass
+    return "development", "unknown"
+
+
 def main():
-    print("=== Python Console App ===\n")
+    version, last_updated = get_app_version()
+    print(f"=== Python Console App v{version} ({last_updated}) ===\n")
 
     # Ensure the data directory exists on startup
     if not os.path.exists(DATA_DIR):
