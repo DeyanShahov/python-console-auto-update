@@ -45,11 +45,17 @@
 **Най-лесният начин - директно изтегляне с Git:**
 
 ```bash
-# За всички системи
-git clone --branch production --single-branch https://github.com/DeyanShahov/python-console-auto-update.git python-console-app
-cd python-console-app
+# За всички системи (в празна директория)
+git clone --branch production --single-branch https://github.com/DeyanShahov/python-console-auto-update.git my-app
+cd my-app
 python main.py
 ```
+
+**⚠️ Важно:** Стартирайте командите в празна директория или такава, която няма `python-console-app` или `my-app` папка!
+
+**Ако имате проблеми с Git:**
+1. Изтеглете ZIP файла от GitHub
+2. Разархивирайте в желаното място
 
 **Алтернативно, ако нямате Git - ръчно изтегляне:**
 1. Отворете в браузър: https://github.com/DeyanShahov/python-console-auto-update
