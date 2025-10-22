@@ -7,6 +7,8 @@ import json
 import os
 import glob
 
+# Directory for user data JSON files
+DATA_DIR = "user_data"
 
 def show_menu():
     """
@@ -22,11 +24,17 @@ def show_menu():
 
 def list_json_files():
     """
-    List all JSON files in current directory.
-    Returns list of .json files.
+    List all JSON files in the data directory.
+    Returns list of .json files (relative to DATA_DIR).
     """
-    json_files = glob.glob("*.json")
-    return json_files
+    # Ensure data directory exists before listing
+    if not os.path.exists(DATA_DIR):
+        os.makedirs(DATA_DIR)
+        return [] # No files if directory was just created
+
+    json_files = glob.glob(os.path.join(DATA_DIR, "*.json"))
+    # Return only the filename for display, but use full path for operations
+    return [os.path.basename(f) for f in json_files]
 
 
 def validate_file_choice(choice, files_list):
@@ -51,19 +59,21 @@ def read_json_file():
     files = list_json_files()
 
     if not files:
-        print("Няма JSON файлове в директорията.")
+        print(f"Няма JSON файлове в директорията '{DATA_DIR}'.")
         return
 
-    print("\nНалични JSON файлове:")
+    print(f"\nНалични JSON файлове в '{DATA_DIR}':")
     for i, file in enumerate(files, 1):
         print(f"{i}. {file}")
 
     choice = input("\nИзберете файл (номер): ").strip()
 
-    is_valid, filepath = validate_file_choice(choice, files)
+    is_valid, filename = validate_file_choice(choice, files)
     if not is_valid:
         print("Невалиден избор.")
         return
+
+    filepath = os.path.join(DATA_DIR, filename) # Construct full path
 
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
@@ -101,9 +111,15 @@ def create_new_json():
     if not filename.endswith('.json'):
         filename += '.json'
 
+    # Ensure data directory exists
+    if not os.path.exists(DATA_DIR):
+        os.makedirs(DATA_DIR)
+
+    filepath = os.path.join(DATA_DIR, filename) # Construct full path
+
     # Check if file already exists
-    if os.path.exists(filename):
-        overwrite = input(f"Файлът '{filename}' вече съществува. Презаписване? (y/n): ").strip().lower()
+    if os.path.exists(filepath):
+        overwrite = input(f"Файлът '{filepath}' вече съществува. Презаписване? (y/n): ").strip().lower()
         if overwrite != 'y':
             print("Операцията е отменена.")
             return
@@ -119,8 +135,8 @@ def create_new_json():
     }
 
     try:
-        with open(filename, 'w', encoding='utf-8') as f:
+        with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
-        print(f"Файлът '{filename}' е създаден успешно.")
+        print(f"Файлът '{filepath}' е създаден успешно.")
     except Exception as e:
         print(f"Грешка при запазването на файла: {e}")

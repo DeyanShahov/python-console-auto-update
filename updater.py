@@ -71,35 +71,42 @@ def get_latest_github_version():
         return None
 
 
+from utils import DATA_DIR # Import DATA_DIR
+
 def backup_user_data():
     """
-    Backup all JSON files (user data) before update.
+    Backup all JSON files (user data) from DATA_DIR before update.
     """
     backup_dir = f"backup_{int(datetime.now().timestamp())}"
     os.makedirs(backup_dir, exist_ok=True)
 
-    json_files = [f for f in os.listdir('.') if f.endswith('.json')]
-    for file in json_files:
-        if file != VERSION_FILE:  # Don't backup version file
-            shutil.copy2(file, os.path.join(backup_dir, file))
-            print(f"Backup: {file}")
+    if os.path.exists(DATA_DIR):
+        json_files = [f for f in os.listdir(DATA_DIR) if f.endswith('.json')]
+        for file in json_files:
+            src_path = os.path.join(DATA_DIR, file)
+            dst_path = os.path.join(backup_dir, file)
+            shutil.copy2(src_path, dst_path)
+            print(f"Backup: {src_path}")
 
     return backup_dir
 
 
 def restore_user_data(backup_dir):
     """
-    Restore JSON files after update.
+    Restore JSON files to DATA_DIR after update.
     """
     if not os.path.exists(backup_dir):
         return
 
+    if not os.path.exists(DATA_DIR):
+        os.makedirs(DATA_DIR)
+
     for file in os.listdir(backup_dir):
         if file.endswith('.json'):
             src = os.path.join(backup_dir, file)
-            dst = file
+            dst = os.path.join(DATA_DIR, file)
             shutil.copy2(src, dst)
-            print(f"Restored: {file}")
+            print(f"Restored: {dst}")
 
     # Optionally remove backup after successful restore
     shutil.rmtree(backup_dir, onerror=remove_readonly)
@@ -130,14 +137,14 @@ def download_and_apply_update(github_version_data):
         extracted_folder_name = f"{GITHUB_REPO_NAME}-{GIT_BRANCH}"
         extracted_app_path = os.path.join(temp_extract_dir, extracted_folder_name)
 
-        # Copy updated files, excluding user data and the version file itself
+        # Copy updated files, excluding the DATA_DIR and the version file itself
         for item_name in os.listdir(extracted_app_path):
             source_path = os.path.join(extracted_app_path, item_name)
             destination_path = os.path.join('.', item_name)
 
-            # Skip user data JSON files and the version file
-            if item_name.endswith('.json') and item_name != VERSION_FILE:
-                print(f"Пропускане на потребителски файл: {item_name}")
+            # Skip the DATA_DIR and the version file
+            if item_name == DATA_DIR or item_name == VERSION_FILE:
+                print(f"Пропускане на директория/файл: {item_name}")
                 continue
             
             # Overwrite existing files or copy new ones
