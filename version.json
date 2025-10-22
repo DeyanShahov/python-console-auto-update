@@ -1,6 +1,6 @@
 {
-  "version": "1.0.1",
-  "commit_sha": "latest_changes_after_user_data_and_start_bat",
+  "version": "1.0.2",
+  "commit_sha": "latest_changes_after_version_display_in_header",
   "last_updated": "2025-10-22",
-  "release_notes": "Added user_data directory, start.bat, and improved update mechanism."
+  "release_notes": "Added user_data directory, start.bat, improved update mechanism, and displayed version info in app header."
 }
