@@ -11,9 +11,19 @@ import os
 import shutil
 import re
 import glob
+import stat
+import time
 
 GITHUB_REPO = "https://github.com/DeyanShahov/python-console-auto-update.git"
 APP_DIR = "python-console-app"
+
+def remove_readonly(func, path, _):
+    """Clear the readonly bit and reattempt the removal on Windows."""
+    try:
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+    except Exception as e:
+        print(f"Error removing {path}: {e}")
 
 def run_command(command, cwd=None):
     """
@@ -70,71 +80,85 @@ def main():
     """
     Main installation process.
     """
-    print("🔄 Installing Python Console App...")
-    print("📥 Downloading latest production version from GitHub...")
+    # Guard clause: Check if being run from inside the app directory
+    if os.path.basename(os.getcwd()) == APP_DIR and os.path.exists('main.py'):
+        print("❌ Грешка: Този скрипт е само за инсталация.")
+        print("Изглежда, че приложението вече е инсталирано тук.")
+        print("\n🚀 За да стартирате приложението, използвайте командата:")
+        print("   python main.py")
+        sys.exit(1)
+
+    print("🔄 Инсталиране на конзолното приложение...")
+    print("📥 Изтегляне на последната версия от GitHub...")
 
     # Step 1: Clone the production branch
     if os.path.exists(APP_DIR):
-        print(f"⚠️  Directory '{APP_DIR}' already exists. Removing old installation...")
-        shutil.rmtree(APP_DIR)
+        print(f"⚠️  Директорията '{APP_DIR}' вече съществува. Премахване на старата инсталация...")
+        shutil.rmtree(APP_DIR, onerror=remove_readonly)
+        time.sleep(1) # Give OS time to release file handles
 
     clone_cmd = f"git clone --branch production --single-branch {GITHUB_REPO} {APP_DIR}"
     if not run_command(clone_cmd):
         print("❌ Failed to clone repository from GitHub")
         sys.exit(1)
 
-    print("✅ Successfully downloaded the application")
+    print("✅ Приложението е изтеглено успешно")
 
     # Step 2: Change to app directory and check Python version
-    os.chdir(APP_DIR)
-
-    # Check Python version
-    if sys.version_info < (3, 6):
-        print("❌ Python 3.6 or higher is required")
+    try:
+        os.chdir(APP_DIR)
+    except FileNotFoundError:
+        print(f"❌ Грешка: Директорията '{APP_DIR}' не беше създадена. Проверете правата за достъп.")
         sys.exit(1)
 
-    print("✅ Python version check passed")
+
+    print("✅ Проверката на Python версията е успешна")
 
     # Step 3: Clean up development files (not needed for consumers)
     development_files = [
         '.git',
         '.gitignore',
-        'install.py',  # Remove install script after use
+        'install.py', # Remove install script after use
         '__pycache__',
+        'README.md',
         '*.pyc',
         '*.pyo',
         '.vscode',
         '.idea',
         '*.log',
-        'README.md',  # Keep if wanted, but could be removed too
     ]
 
     files_removed = []
+    print("🧹 Започва почистване на ненужни файлове...")
     for pattern in development_files:
-        if pattern.endswith('*'):  # Wildcard pattern
+        # Handle wildcard patterns
+        if '*' in pattern:
             matches = glob.glob(pattern)
             for match in matches:
-                if os.path.isfile(match):
-                    os.remove(match)
-                    files_removed.append(match)
-                elif os.path.isdir(match):
-                    shutil.rmtree(match)
-                    files_removed.append(match)
-        else:  # Specific file/directory
+                if os.path.exists(match):
+                    try:
+                        if os.path.isfile(match):
+                            os.remove(match)
+                        elif os.path.isdir(match):
+                            shutil.rmtree(match, onerror=remove_readonly)
+                        files_removed.append(match)
+                    except Exception as e:
+                        print(f"⚠️ Не може да премахне '{match}': {e}")
+        else: # Handle specific files/directories
             if os.path.exists(pattern):
-                if os.path.isfile(pattern):
-                    os.remove(pattern)
+                try:
+                    if os.path.isfile(pattern):
+                        os.remove(pattern)
+                    elif os.path.isdir(pattern):
+                        shutil.rmtree(pattern, onerror=remove_readonly)
                     files_removed.append(pattern)
-                elif os.path.isdir(pattern):
-                    shutil.rmtree(pattern)
-                    files_removed.append(pattern)
+                except Exception as e:
+                    print(f"⚠️ Не може да премахне '{pattern}': {e}")
 
     if files_removed:
-        print(f"🧹 Cleaned up development files: {len(files_removed)} items")
-        for file in files_removed[:5]:  # Show first 5 for logging
-            print(f"   Removed: {file}")
-        if len(files_removed) > 5:
-            print(f"   ... and {len(files_removed) - 5} more")
+        print(f"🧹 Почистване завършено: премахнати {len(files_removed)} елемента.")
+    else:
+        print("🧹 Няма ненужни файлове за почистване.")
 
     # Step 4: Make main.py executable on Unix systems
     if not os.name == 'nt':  # Not Windows
@@ -143,28 +167,25 @@ def main():
         except OSError:
             pass  # Continue if chmod fails
 
-    print("\n🎉 Installation completed successfully!")
-    print(f"📂 Application installed in: {os.getcwd()}")
-    print("\n🚀 To run the application:")
-    print(f"   cd {APP_DIR}")
+    print("\n🎉 Инсталацията е завършена успешно!")
+    print(f"📂 Приложението е инсталирано в: {os.getcwd()}")
+    print("\n🚀 За да стартирате приложението, използвайте:")
     print("   python main.py")
 
     # Step 5: Ask if user wants to run the app now
     try:
-        choice = input("\n❓ Would you like to run the application now? (y/n): ").strip().lower()
+        choice = input("\n❓ Желаете ли да стартирате приложението сега? (y/n): ").strip().lower()
         if choice == 'y':
-            print("\n🏃 Starting Python Console App...\n")
+            print("\n🏃 Стартиране на приложението...\n")
             print("-" * 40)
             subprocess.run([sys.executable, 'main.py'])
         else:
-            print("✅ Installation complete. You can run the app later with:")
-            print(f"   cd {APP_DIR}")
+            print("\n✅ Инсталацията е завършена. Можете да стартирате приложението по-късно с:")
+            print(f"   cd {os.path.basename(os.getcwd())}")
             print("   python main.py")
     except KeyboardInterrupt:
-        print("\n\n⏹️  Installation cancelled by user.")
-        print("You can run the app later with:")
-        print(f"   cd {APP_DIR}")
-        print("   python main.py")
+        print("\n\n⏹️  Инсталацията е прекратена от потребителя.")
+        print("Можете да стартирате приложението по-късно.")
 
 if __name__ == "__main__":
     main()
