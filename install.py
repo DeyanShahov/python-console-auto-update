@@ -9,6 +9,7 @@ import subprocess
 import sys
 import os
 import shutil
+import re
 
 GITHUB_REPO = "https://github.com/DeyanShahov/python-console-auto-update.git"
 APP_DIR = "python-console-app"
@@ -28,6 +29,41 @@ def run_command(command, cwd=None):
         print(f"Failed to execute command: {command}")
         print(f"Error: {e}")
         return False
+
+
+def find_python_command():
+    """
+    Find available Python command on Windows/Linux/Mac systems.
+    Returns the command to use for Python.
+    """
+    import shutil
+
+    # Try different Python commands in order of preference
+    python_commands = [
+        'python3',          # Standard on Linux/Mac and some Windows
+        'python',           # Could be Python 2 or 3, but usually 3 in modern systems
+        'py -3',            # Windows launcher for Python 3
+        'py',               # Windows launcher (may default to Python 3)
+    ]
+
+    for cmd in python_commands:
+        try:
+            # Test if command exists and can run Python
+            result = subprocess.run([cmd.split()[0], '--version'],
+                                  capture_output=True, text=True,
+                                  timeout=5)
+            if result.returncode == 0 and 'Python' in result.stdout:
+                version_match = re.search(r'Python (\d+)\.(\d+)', result.stdout)
+                if version_match:
+                    major = int(version_match.group(1))
+                    minor = int(version_match.group(2))
+                    if major >= 3:  # Any Python 3 version should work
+                        print(f"✅ Found Python command: {cmd} (version {major}.{minor})")
+                        return cmd
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            continue
+
+    return None
 
 def main():
     """
