@@ -10,6 +10,9 @@ import shutil
 import subprocess
 from urllib.request import urlopen, URLError
 from datetime import datetime
+import zipfile
+import stat
+import time
 
 # GitHub repository details (configured for this project)
 GITHUB_REPO_OWNER = "DeyanShahov"    # GitHub username
@@ -19,6 +22,16 @@ GIT_BRANCH = "production"            # Branch for production releases
 # Local version file
 VERSION_FILE = "version.json"
 
+# Add a constant for the ZIP archive URL
+GITHUB_ZIP_URL = f"https://github.com/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/archive/refs/heads/{GIT_BRANCH}.zip"
+
+def remove_readonly(func, path, _):
+    """Clear the readonly bit and reattempt the removal on Windows."""
+    try:
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+    except Exception as e:
+        print(f"Error removing {path}: {e}")
 
 def get_current_version():
     """
@@ -37,15 +50,22 @@ def get_current_version():
 def get_latest_github_version():
     """
     Fetch latest version from GitHub API.
-    Returns tuple (version, commit_sha) or None if error.
+    Returns tuple (version, commit_sha, version_json_content) or None if error.
     """
     try:
-        url = f"https://api.github.com/repos/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/commits/{GIT_BRANCH}"
-        with urlopen(url) as response:
-            data = json.loads(response.read().decode('utf-8'))
-            commit_sha = data['sha']
-            # For tag-based versioning, you would check tags instead
-            return 'latest', commit_sha  # Simple versioning based on commits
+        # Get latest commit SHA for the branch
+        commit_url = f"https://api.github.com/repos/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/commits/{GIT_BRANCH}"
+        with urlopen(commit_url) as response:
+            commit_data = json.loads(response.read().decode('utf-8'))
+            latest_commit_sha = commit_data['sha']
+
+        # Get version.json content from GitHub
+        version_json_url = f"https://raw.githubusercontent.com/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/{GIT_BRANCH}/version.json"
+        with urlopen(version_json_url) as response:
+            github_version_data = json.loads(response.read().decode('utf-8'))
+            github_version = github_version_data.get('version', '0.0.0')
+
+        return github_version, latest_commit_sha, github_version_data
     except (URLError, KeyError, json.JSONDecodeError) as e:
         print(f"Error checking for updates: {e}")
         return None
@@ -82,41 +102,69 @@ def restore_user_data(backup_dir):
             print(f"Restored: {file}")
 
     # Optionally remove backup after successful restore
-    shutil.rmtree(backup_dir)
+    shutil.rmtree(backup_dir, onerror=remove_readonly)
     print("Backup directory removed.")
 
 
-def perform_update():
+def download_and_apply_update(github_version_data):
     """
-    Perform git pull and update version file.
+    Downloads the latest production branch as a ZIP, extracts it,
+    and applies the update, preserving user data.
     """
+    print("Изтегляне на новата версия...")
+    temp_zip_path = "update.zip"
+    temp_extract_dir = "temp_update_extract"
+
     try:
-        # Git pull
-        result = subprocess.run(['git', 'pull', 'origin', GIT_BRANCH],
-                              capture_output=True, text=True, cwd='.')
+        # Download the ZIP archive
+        with urlopen(GITHUB_ZIP_URL) as response, open(temp_zip_path, 'wb') as out_file:
+            shutil.copyfileobj(response, out_file)
+        print("Архивът е изтеглен.")
 
-        if result.returncode == 0:
-            print("Update successful.")
+        # Extract the archive
+        with zipfile.ZipFile(temp_zip_path, 'r') as zip_ref:
+            zip_ref.extractall(temp_extract_dir)
+        print("Архивът е разархивиран.")
 
-            # Update version file
-            latest_version, commit_sha = get_latest_github_version() or ('updated', 'unknown')
-            version_data = {
-                'version': latest_version,
-                'commit_sha': commit_sha,
-                'last_updated': str(datetime.now())
-            }
+        # The extracted folder will have a name like "repo-name-branch"
+        extracted_folder_name = f"{GITHUB_REPO_NAME}-{GIT_BRANCH}"
+        extracted_app_path = os.path.join(temp_extract_dir, extracted_folder_name)
 
-            with open(VERSION_FILE, 'w', encoding='utf-8') as f:
-                json.dump(version_data, f, indent=2)
+        # Copy updated files, excluding user data and the version file itself
+        for item_name in os.listdir(extracted_app_path):
+            source_path = os.path.join(extracted_app_path, item_name)
+            destination_path = os.path.join('.', item_name)
 
-            return True
-        else:
-            print(f"Update failed: {result.stderr}")
-            return False
+            # Skip user data JSON files and the version file
+            if item_name.endswith('.json') and item_name != VERSION_FILE:
+                print(f"Пропускане на потребителски файл: {item_name}")
+                continue
+            
+            # Overwrite existing files or copy new ones
+            if os.path.isfile(source_path):
+                shutil.copy2(source_path, destination_path)
+            elif os.path.isdir(source_path):
+                # For directories, remove existing and copy new
+                if os.path.exists(destination_path):
+                    shutil.rmtree(destination_path, onerror=remove_readonly)
+                shutil.copytree(source_path, destination_path)
+            print(f"Обновен файл/директория: {item_name}")
 
-    except subprocess.SubprocessError as e:
-        print(f"Error during update: {e}")
+        # Update local version.json
+        with open(VERSION_FILE, 'w', encoding='utf-8') as f:
+            json.dump(github_version_data, f, indent=2)
+        print("Локалният version.json е обновен.")
+
+        return True
+    except (URLError, KeyError, json.JSONDecodeError, zipfile.BadZipFile) as e:
+        print(f"Грешка при изтегляне/прилагане на обновяването: {e}")
         return False
+    finally:
+        # Clean up temporary files
+        if os.path.exists(temp_zip_path):
+            os.remove(temp_zip_path)
+        if os.path.exists(temp_extract_dir):
+            shutil.rmtree(temp_extract_dir, onerror=remove_readonly)
 
 
 def check_for_updates():
@@ -125,21 +173,22 @@ def check_for_updates():
     """
     print("Проверка за нови версии...")
 
-    current_version, current_sha = get_current_version()
+    current_version, _ = get_current_version() # current_sha is no longer relevant for comparison
     latest_info = get_latest_github_version()
 
     if latest_info:
-        latest_version, latest_sha = latest_info
+        latest_github_version, _, github_version_data = latest_info
 
-        if latest_sha != current_sha:
-            print(f"Намерена е нова версия: {latest_version}")
+        # Compare versions (using the 'version' field from version.json)
+        if latest_github_version != current_version:
+            print(f"Намерена е нова версия: {latest_github_version} (текуща: {current_version})")
             print("Започваме обновяване...")
 
             # Backup user data
             backup_dir = backup_user_data()
 
             # Perform update
-            if perform_update():
+            if download_and_apply_update(github_version_data):
                 # Restore user data
                 restore_user_data(backup_dir)
                 print("Обновяването е завършено успешно!")
