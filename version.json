@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
-  "commit_sha": "fadc0ad4c15fe951e53feda1a2876f9c2816651b",
+  "version": "1.0.1",
+  "commit_sha": "latest_changes_after_user_data_and_start_bat",
   "last_updated": "2025-10-22",
-  "release_notes": "Production release - stable user version"
+  "release_notes": "Added user_data directory, start.bat, and improved update mechanism."
 }
