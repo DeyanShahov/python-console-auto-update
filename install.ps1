@@ -18,11 +18,27 @@ try {
     Write-Host "🚀 Стартиране на инсталацията..."
 
     # Execute install.py using the default Python interpreter
-    # This will handle cloning, cleanup, and running the app
+    # This will handle cloning, cleanup, and running the app, including start.bat creation
     & python $tempInstallPyPath
 
     # Clean up the temporary install.py script
     Remove-Item $tempInstallPyPath -ErrorAction SilentlyContinue
+
+    Write-Host "`n🎉 Инсталацията е завършена успешно!"
+    Write-Host "📂 Приложението е инсталирано в: $(Get-Location)\python-console-app"
+    Write-Host "`n🚀 За да стартирате приложението:"
+    Write-Host "   Кликнете два пъти на 'start.bat' файла"
+    Write-Host "   Или изпълнете: start.bat"
+
+    # Ask to run the app now
+    $choice = Read-Host "`n❓ Желаете ли да стартирате приложението сега? (y/n)"
+    if ($choice -eq 'y') {
+        Write-Host "`n🏃 Стартиране на приложението...`n"
+        Write-Host "----------------------------------------"
+        Start-Process -FilePath "start.bat" -WorkingDirectory "python-console-app"
+    } else {
+        Write-Host "`n✅ Инсталацията е завършена. Можете да стартирате приложението по-късно."
+    }
 
 } catch {
     Write-Host "❌ Грешка по време на инсталацията:" -ForegroundColor Red

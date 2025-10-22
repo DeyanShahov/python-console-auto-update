@@ -141,20 +141,41 @@ def main():
 
     print("\n🎉 Инсталацията е завършена успешно!")
     print(f"📂 Приложението е инсталирано в: {os.getcwd()}")
-    print("\n🚀 За да стартирате приложението, използвайте:")
-    print("   python main.py")
+    # Step 5: Create start.bat for Windows users
+    if os.name == 'nt': # Only for Windows
+        start_bat_content = """@echo off
+echo Starting Python Console App...
+python main.py
+pause"""
+        start_bat_path = os.path.join(os.getcwd(), "start.bat")
+        try:
+            with open(start_bat_path, 'w', encoding='utf-8') as f:
+                f.write(start_bat_content)
+            print("✅ Създаден 'start.bat' файл за лесно стартиране.")
+        except Exception as e:
+            print(f"⚠️ Грешка при създаване на 'start.bat': {e}")
 
-    # Step 5: Ask if user wants to run the app now
+    print("\n🎉 Инсталацията е завършена успешно!")
+    print(f"📂 Приложението е инсталирано в: {os.getcwd()}")
+    print("\n🚀 За да стартирате приложението:")
+    if os.name == 'nt':
+        print("   Кликнете два пъти на 'start.bat' файла")
+        print("   Или изпълнете: start.bat")
+    else:
+        print("   python main.py")
+
+    # Step 6: Ask if user wants to run the app now
     try:
         choice = input("\n❓ Желаете ли да стартирате приложението сега? (y/n): ").strip().lower()
         if choice == 'y':
             print("\n🏃 Стартиране на приложението...\n")
             print("-" * 40)
-            subprocess.run([sys.executable, 'main.py'])
+            if os.name == 'nt':
+                subprocess.run(['start.bat'], shell=True)
+            else:
+                subprocess.run([sys.executable, 'main.py'])
         else:
-            print("\n✅ Инсталацията е завършена. Можете да стартирате приложението по-късно с:")
-            print(f"   cd {APP_DIR}") # Use APP_DIR as it's relative to where install.py was run
-            print("   python main.py")
+            print("\n✅ Инсталацията е завършена. Можете да стартирате приложението по-късно.")
     except KeyboardInterrupt:
         print("\n\n⏹️  Инсталацията е прекратена от потребителя.")
         print("Можете да стартирате приложението по-късно.")

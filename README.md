@@ -90,6 +90,12 @@ curl -sSL https://raw.githubusercontent.com/DeyanShahov/python-console-auto-upda
 #### 🚀 Ръчно стартиране
 Ако вече имате инсталирана директорията:
 
+**Windows:**
+```bash
+start.bat
+```
+
+**Linux/macOS:**
 ```bash
 python main.py
 ```
