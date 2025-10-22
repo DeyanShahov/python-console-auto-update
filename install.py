@@ -15,7 +15,7 @@ import stat
 import time
 
 GITHUB_REPO = "https://github.com/DeyanShahov/python-console-auto-update.git"
-APP_DIR = "python-console-app"
+APP_DIR = "python-console-app" # Default directory name for the installed app
 
 def remove_readonly(func, path, _):
     """Clear the readonly bit and reattempt the removal on Windows."""
@@ -41,47 +41,15 @@ def run_command(command, cwd=None):
         print(f"Error: {e}")
         return False
 
-
-def find_python_command():
-    """
-    Find available Python command on Windows/Linux/Mac systems.
-    Returns the command to use for Python.
-    """
-    import shutil
-
-    # Try different Python commands in order of preference
-    python_commands = [
-        'python3',          # Standard on Linux/Mac and some Windows
-        'python',           # Could be Python 2 or 3, but usually 3 in modern systems
-        'py -3',            # Windows launcher for Python 3
-        'py',               # Windows launcher (may default to Python 3)
-    ]
-
-    for cmd in python_commands:
-        try:
-            # Test if command exists and can run Python
-            result = subprocess.run([cmd.split()[0], '--version'],
-                                  capture_output=True, text=True,
-                                  timeout=5)
-            if result.returncode == 0 and 'Python' in result.stdout:
-                version_match = re.search(r'Python (\d+)\.(\d+)', result.stdout)
-                if version_match:
-                    major = int(version_match.group(1))
-                    minor = int(version_match.group(2))
-                    if major >= 3:  # Any Python 3 version should work
-                        print(f"✅ Found Python command: {cmd} (version {major}.{minor})")
-                        return cmd
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            continue
-
-    return None
-
 def main():
     """
     Main installation process.
     """
+    # Determine the directory where the app will be installed
+    install_target_dir = os.path.join(os.getcwd(), APP_DIR)
+
     # Guard clause: Check if being run from inside the app directory
-    if os.path.basename(os.getcwd()) == APP_DIR and os.path.exists('main.py'):
+    if os.path.exists(os.path.join(os.getcwd(), 'main.py')) and os.path.exists(os.path.join(os.getcwd(), 'updater.py')):
         print("❌ Грешка: Този скрипт е само за инсталация.")
         print("Изглежда, че приложението вече е инсталирано тук.")
         print("\n🚀 За да стартирате приложението, използвайте командата:")
@@ -92,9 +60,9 @@ def main():
     print("📥 Изтегляне на последната версия от GitHub...")
 
     # Step 1: Clone the production branch
-    if os.path.exists(APP_DIR):
-        print(f"⚠️  Директорията '{APP_DIR}' вече съществува. Премахване на старата инсталация...")
-        shutil.rmtree(APP_DIR, onerror=remove_readonly)
+    if os.path.exists(install_target_dir):
+        print(f"⚠️  Директорията '{install_target_dir}' вече съществува. Премахване на старата инсталация...")
+        shutil.rmtree(install_target_dir, onerror=remove_readonly)
         time.sleep(1) # Give OS time to release file handles
 
     clone_cmd = f"git clone --branch production --single-branch {GITHUB_REPO} {APP_DIR}"
@@ -104,21 +72,13 @@ def main():
 
     print("✅ Приложението е изтеглено успешно")
 
-    # Step 2: Change to app directory and check Python version
-    try:
-        os.chdir(APP_DIR)
-    except FileNotFoundError:
-        print(f"❌ Грешка: Директорията '{APP_DIR}' не беше създадена. Проверете правата за достъп.")
-        sys.exit(1)
-
-
-    print("✅ Проверката на Python версията е успешна")
-
-    # Step 3: Clean up development files (not needed for consumers)
+    # Step 2: Perform cleanup *before* changing directory
+    # This ensures install.py is not trying to delete files it's running from
+    print(f"🧹 Започва почистване на ненужни файлове в '{install_target_dir}'...")
     development_files = [
         '.git',
         '.gitignore',
-        'install.py', # Remove install script after use
+        'install.py', # This install.py is the one *inside* the cloned repo, which should be removed
         '__pycache__',
         'README.md',
         '*.pyc',
@@ -129,11 +89,10 @@ def main():
     ]
 
     files_removed = []
-    print("🧹 Започва почистване на ненужни файлове...")
     for pattern in development_files:
-        # Handle wildcard patterns
-        if '*' in pattern:
-            matches = glob.glob(pattern)
+        full_pattern_path = os.path.join(install_target_dir, pattern)
+        if '*' in pattern:  # Handle wildcard patterns
+            matches = glob.glob(full_pattern_path)
             for match in matches:
                 if os.path.exists(match):
                     try:
@@ -145,20 +104,33 @@ def main():
                     except Exception as e:
                         print(f"⚠️ Не може да премахне '{match}': {e}")
         else: # Handle specific files/directories
-            if os.path.exists(pattern):
+            if os.path.exists(full_pattern_path):
                 try:
-                    if os.path.isfile(pattern):
-                        os.remove(pattern)
-                    elif os.path.isdir(pattern):
-                        shutil.rmtree(pattern, onerror=remove_readonly)
-                    files_removed.append(pattern)
+                    if os.path.isfile(full_pattern_path):
+                        os.remove(full_pattern_path)
+                    elif os.path.isdir(full_pattern_path):
+                        shutil.rmtree(full_pattern_path, onerror=remove_readonly)
+                    files_removed.append(full_pattern_path)
                 except Exception as e:
-                    print(f"⚠️ Не може да премахне '{pattern}': {e}")
+                    print(f"⚠️ Не може да премахне '{full_pattern_path}': {e}")
 
     if files_removed:
         print(f"🧹 Почистване завършено: премахнати {len(files_removed)} елемента.")
     else:
         print("🧹 Няма ненужни файлове за почистване.")
+
+    # Step 3: Change to app directory and check Python version
+    try:
+        os.chdir(install_target_dir)
+    except FileNotFoundError:
+        print(f"❌ Грешка: Директорията '{install_target_dir}' не беше създадена. Проверете правата за достъп.")
+        sys.exit(1)
+
+    # Check Python version
+    if sys.version_info < (3, 6):
+        print("❌ Python 3.6 или по-нова версия е необходима.")
+        sys.exit(1)
+    print("✅ Проверката на Python версията е успешна")
 
     # Step 4: Make main.py executable on Unix systems
     if not os.name == 'nt':  # Not Windows
@@ -181,7 +153,7 @@ def main():
             subprocess.run([sys.executable, 'main.py'])
         else:
             print("\n✅ Инсталацията е завършена. Можете да стартирате приложението по-късно с:")
-            print(f"   cd {os.path.basename(os.getcwd())}")
+            print(f"   cd {APP_DIR}") # Use APP_DIR as it's relative to where install.py was run
             print("   python main.py")
     except KeyboardInterrupt:
         print("\n\n⏹️  Инсталацията е прекратена от потребителя.")
