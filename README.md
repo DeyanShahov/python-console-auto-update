@@ -41,33 +41,23 @@
 ### Стартиране на приложението
 
 #### 🔧 Бърза инсталация (за потребители)
-Ако искате да инсталирате приложението на чиста машина, използвайте тази едноредова команда:
 
-**Linux/macOS/Ubuntu:**
+**Най-лесният начин - директно изтегляне с Git:**
+
 ```bash
-curl -sSL https://raw.githubusercontent.com/DeyanShahov/python-console-auto-update/production/install.py | python3
+# За всички системи
+git clone --branch production --single-branch https://github.com/DeyanShahov/python-console-auto-update.git python-console-app
+cd python-console-app
+python main.py
 ```
 
-**Windows (PowerShell) - ако имате Python 3.6+:**
-```powershell
-curl -sSL https://raw.githubusercontent.com/DeyanShahov/python-console-auto-update/production/install.py | python
-```
+**Алтернативно, ако нямате Git - ръчно изтегляне:**
+1. Отворете в браузър: https://github.com/DeyanShahov/python-console-auto-update
+2. Кликнете "Code" → "Download ZIP" (production branch)
+3. Разархивирайте и стартирайте `python main.py`
 
-**Windows (CMD) - ако имате Python 3.6+:**
-```cmd
-curl -sSL https://raw.githubusercontent.com/DeyanShahov/python-console-auto-update/production/install.py -o install.py && python install.py
-```
-
-**⚠️ Забележка за Windows:**
-Ако командата `python` не работи, използвайте:
-- `py` (ако имате Python Launcher инсталиран)
-- `python3` (ако имате python3.exe)
-- Или ръчно: свалете install.py файла и го стартирайте с целеизбраната Python версия
-
-Това ще:
-- Изтегли последната стабилна версия
-- Подготви приложението за употреба
-- Предложи директно стартиране
+**⚠️ Ако имате проблеми с SSL/TLS:**
+Някои Windows системи имат проблеми с curl. Използвайте алтернативния метод с Git clone.
 
 #### 🚀 Ръчно стартиране
 Ако вече имате инсталирана директорията:
