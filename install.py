@@ -10,6 +10,7 @@ import sys
 import os
 import shutil
 import re
+import glob
 
 GITHUB_REPO = "https://github.com/DeyanShahov/python-console-auto-update.git"
 APP_DIR = "python-console-app"
@@ -94,17 +95,53 @@ def main():
 
     print("✅ Python version check passed")
 
-    # Step 3: Make main.py executable on Unix systems
+    # Step 3: Clean up development files (not needed for consumers)
+    development_files = [
+        '.git',
+        '.gitignore',
+        'install.py',  # Remove install script after use
+        '__pycache__',
+        '*.pyc',
+        '*.pyo',
+        '.vscode',
+        '.idea',
+        '*.log',
+        'README.md',  # Keep if wanted, but could be removed too
+    ]
+
+    files_removed = []
+    for pattern in development_files:
+        if pattern.endswith('*'):  # Wildcard pattern
+            matches = glob.glob(pattern)
+            for match in matches:
+                if os.path.isfile(match):
+                    os.remove(match)
+                    files_removed.append(match)
+                elif os.path.isdir(match):
+                    shutil.rmtree(match)
+                    files_removed.append(match)
+        else:  # Specific file/directory
+            if os.path.exists(pattern):
+                if os.path.isfile(pattern):
+                    os.remove(pattern)
+                    files_removed.append(pattern)
+                elif os.path.isdir(pattern):
+                    shutil.rmtree(pattern)
+                    files_removed.append(pattern)
+
+    if files_removed:
+        print(f"🧹 Cleaned up development files: {len(files_removed)} items")
+        for file in files_removed[:5]:  # Show first 5 for logging
+            print(f"   Removed: {file}")
+        if len(files_removed) > 5:
+            print(f"   ... and {len(files_removed) - 5} more")
+
+    # Step 4: Make main.py executable on Unix systems
     if not os.name == 'nt':  # Not Windows
         try:
             os.chmod('main.py', 0o755)
         except OSError:
             pass  # Continue if chmod fails
-
-    # Step 4: Clean up installation files (not needed for user)
-    if os.path.exists('.git'):
-        shutil.rmtree('.git')
-    print("🧹 Cleaned up installation files")
 
     print("\n🎉 Installation completed successfully!")
     print(f"📂 Application installed in: {os.getcwd()}")
