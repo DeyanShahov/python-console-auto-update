@@ -1,6 +1,6 @@
 {
-  "version": "1.0.2",
-  "commit_sha": "latest_changes_after_version_display_in_header",
-  "last_updated": "2025-10-22",
-  "release_notes": "Added user_data directory, start.bat, improved update mechanism, and displayed version info in app header."
+  "version": "1.0.3",
+  "commit_sha": "cleanup_production_install_files",
+  "last_updated": "2025-10-23",
+  "release_notes": "Added cleanup for AUTO_UPDATE_WORKFLOW.md and install.ps1 files during production installation."
 }

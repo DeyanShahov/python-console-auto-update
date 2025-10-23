@@ -79,8 +79,10 @@ def main():
         '.git',
         '.gitignore',
         'install.py', # This install.py is the one *inside* the cloned repo, which should be removed
+        'install.ps1', # This install.ps1 is also for installation, not needed after install
         '__pycache__',
         'README.md',
+        'AUTO_UPDATE_WORKFLOW.md', # Development documentation, not needed for end users
         '*.pyc',
         '*.pyo',
         '.vscode',
