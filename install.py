@@ -83,6 +83,7 @@ def main():
         '__pycache__',
         'README.md',
         'AUTO_UPDATE_WORKFLOW.md', # Development documentation, not needed for end users
+        '.clinerules', # Development rules folder, not needed for end users
         '*.pyc',
         '*.pyo',
         '.vscode',
