@@ -1,0 +1,13 @@
+I:\SoftUni\Python apps\Python test for auto update from GitHub\Auto Update\AutoUpdate\bin\Debug\net8.0\AutoUpdate.deps.json
+I:\SoftUni\Python apps\Python test for auto update from GitHub\Auto Update\AutoUpdate\bin\Debug\net8.0\AutoUpdate.dll
+I:\SoftUni\Python apps\Python test for auto update from GitHub\Auto Update\AutoUpdate\bin\Debug\net8.0\AutoUpdate.pdb
+I:\SoftUni\Python apps\Python test for auto update from GitHub\Auto Update\AutoUpdate\obj\Debug\net8.0\AutoUpdate.csproj.AssemblyReference.cache
+I:\SoftUni\Python apps\Python test for auto update from GitHub\Auto Update\AutoUpdate\obj\Debug\net8.0\AutoUpdate.GeneratedMSBuildEditorConfig.editorconfig
+I:\SoftUni\Python apps\Python test for auto update from GitHub\Auto Update\AutoUpdate\obj\Debug\net8.0\AutoUpdate.AssemblyInfoInputs.cache
+I:\SoftUni\Python apps\Python test for auto update from GitHub\Auto Update\AutoUpdate\obj\Debug\net8.0\AutoUpdate.AssemblyInfo.cs
+I:\SoftUni\Python apps\Python test for auto update from GitHub\Auto Update\AutoUpdate\obj\Debug\net8.0\AutoUpdate.csproj.CoreCompileInputs.cache
+I:\SoftUni\Python apps\Python test for auto update from GitHub\Auto Update\AutoUpdate\obj\Debug\net8.0\AutoUpdate.sourcelink.json
+I:\SoftUni\Python apps\Python test for auto update from GitHub\Auto Update\AutoUpdate\obj\Debug\net8.0\AutoUpdate.dll
+I:\SoftUni\Python apps\Python test for auto update from GitHub\Auto Update\AutoUpdate\obj\Debug\net8.0\refint\AutoUpdate.dll
+I:\SoftUni\Python apps\Python test for auto update from GitHub\Auto Update\AutoUpdate\obj\Debug\net8.0\AutoUpdate.pdb
+I:\SoftUni\Python apps\Python test for auto update from GitHub\Auto Update\AutoUpdate\obj\Debug\net8.0\ref\AutoUpdate.dll

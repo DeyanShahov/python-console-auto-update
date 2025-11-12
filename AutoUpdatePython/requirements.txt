@@ -1,0 +1,2 @@
+# AutoUpdate Python dependencies
+# Only standard library dependencies - no external packages needed!

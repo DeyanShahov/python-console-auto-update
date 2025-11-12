@@ -1,0 +1,89 @@
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome to AutoUpdate Demo</h1>
+
+    @if (ViewBag.UpdateError != null)
+    {
+        <div class="alert alert-danger">
+            @ViewBag.UpdateError
+        </div>
+    }
+
+    @if (TempData["UpdateError"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["UpdateError"]
+        </div>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["UpdateMessage"] != null)
+    {
+        <div class="alert alert-info">
+            @TempData["UpdateMessage"]
+            @if (TempData["ReleaseNotes"] != null)
+            {
+                <br><small>@TempData["ReleaseNotes"]</small>
+            }
+        </div>
+    }
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5>Application Status</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Current Version:</strong> @ViewBag.CurrentVersion</p>
+
+            @if (ViewBag.UpdateAvailable == true)
+            {
+                <div class="alert alert-warning">
+                    <h6>🚀 Update Available!</h6>
+                    <p>New version: <strong>@ViewBag.NewVersion</strong></p>
+                    @if (!string.IsNullOrEmpty(ViewBag.ReleaseNotes))
+                    {
+                        <p><em>@ViewBag.ReleaseNotes</em></p>
+                    }
+                </div>
+
+                <form method="post" asp-action="ApplyUpdate" class="d-inline">
+                    <button type="submit" class="btn btn-primary" onclick="return confirm('Are you sure you want to apply the update? The application may need to be restarted.')">
+                        Apply Update
+                    </button>
+                </form>
+            }
+            else
+            {
+                <div class="alert alert-success">
+                    ✅ Your application is up to date!
+                </div>
+            }
+
+            <form method="post" asp-action="CheckForUpdates" class="d-inline ml-2">
+                <button type="submit" class="btn btn-secondary">
+                    Check for Updates
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h6>How AutoUpdate Works:</h6>
+        <ul class="list-unstyled text-left d-inline-block">
+            <li>🔍 Checks GitHub for new versions on page load</li>
+            <li>💾 Safely backs up your data before updating</li>
+            <li>⬇️ Downloads and applies updates from GitHub</li>
+            <li>🔄 Restores your data after successful update</li>
+            <li>🛡️ Rolls back changes if update fails</li>
+        </ul>
+    </div>
+</div>
